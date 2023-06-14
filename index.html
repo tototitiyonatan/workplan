@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Show Excel File on Webpage with Handsontable</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+</head>
+<body>
+  <div id="spreadsheetContainer"></div>
+
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <script>
+    function displayExcelData() {
+      // Fetch the Excel file
+      fetch('data.xlsx')
+        .then(function(response) {
+          return response.arrayBuffer();
+        })
+        .then(function(arrayBuffer) {
+          var data = new Uint8Array(arrayBuffer);
+          var workbook = XLSX.read(data, { type: 'array' });
+
+          // Create a Handsontable instance for each sheet
+          workbook.SheetNames.forEach(function(sheetName) {
+            var worksheet = workbook.Sheets[sheetName];
+            var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            // Convert the Excel data to Handsontable-compatible format
+            var hotData = jsonData.map(function(row) {
+              return row.map(function(cell) {
+                return cell !== undefined ? cell : '';
+              });
+            });
+
+            // Create a new container for each sheet
+            var container = document.createElement('div');
+            container.id = sheetName + 'Container';
+            document.getElementById('spreadsheetContainer').appendChild(container);
+
+            // Create a Handsontable instance within each container
+            var hot = new Handsontable(container, {
+              data: hotData,
+              rowHeaders: true,
+              colHeaders: true,
+            });
+          });
+        });
+    }
+
+    // Call the function to display the Excel data
+    displayExcelData();
+  </script>
+</body>
+</html>
